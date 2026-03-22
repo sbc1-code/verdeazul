@@ -191,3 +191,11 @@ def get_quadrant_summary(period="2024-Q4"):
         GROUP BY v.quadrant
         ORDER BY avg_vida DESC
     """, {"period": period})
+
+
+def get_quadrant_thresholds(period="2024-Q4"):
+    """Get the median health/wealth scores used as quadrant dividers."""
+    df = _query("""
+        SELECT health_score, wealth_score FROM vida_scores WHERE period = :period
+    """, {"period": period})
+    return float(df["health_score"].median()), float(df["wealth_score"].median())

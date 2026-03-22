@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS vida_scores (
     vida_index          REAL,       -- weighted composite 0-100
     gap_score           REAL,       -- abs(health - wealth), higher = more imbalanced
     gap_direction       TEXT CHECK (gap_direction IN ('health_leading', 'wealth_leading', 'balanced')),
-    quadrant            TEXT CHECK (quadrant IN ('thriving', 'cultural_longevity', 'wealth_not_helping', 'critical')),
+    quadrant            TEXT,
     percentile_rank     REAL,       -- 0-100 among all communities
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(community_id, period)

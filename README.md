@@ -1,32 +1,28 @@
 # VerdeAzul
 
-Community longevity potential index.
+Every community has the building blocks. Most just don't know where to start.
 
-Verde = greens on your plate + green in your wallet. Azul = Blue Zone health.
-
-Any community can move the needle. You don't need a mountain or an island. You need data on where you're falling short, and a ranked list of what to fix first.
+Scores 62 communities across North America on healthcare access, nutritious food availability, and economic equity, then tells each one what to do about it.
 
 ## What it does
 
-Scores 61 North American communities on health outcomes and financial access, then identifies:
+- **Vida Index** (0-100): composite health + economic access score weighted toward longevity factors
+- **Gap Analysis**: health outcomes vs economic access scatter plot. Four quadrants reveal whether a community needs food and healthcare infrastructure, financial services, or both
+- **Quadrant mapping**: Thriving, Healthy Not Wealthy (cultural longevity despite poverty), Wealthy Not Healthy (money isn't solving it), Needs Attention
+- **Prescriptive interventions**: ranked, practical actions with projected score impact. Things a city council or community org can fund.
 
-- **Vida Index** (0-100): composite health + wealth score weighted toward longevity factors
-- **Gap Analysis**: where health and wealth diverge, revealing whether a community needs health infrastructure or financial inclusion
-- **Quadrant mapping**: Thriving, Cultural Longevity (healthy but poor), Wealth Not Helping (rich but sick), Critical Priority
-- **Prescriptive interventions**: ranked, practical actions a city council can fund, with projected Vida Index impact
-
-Covers proven Blue Zones, BZ Project certified communities, high-longevity counties, emerging potential areas, US-Mexico border corridor communities, and major metros as baselines.
+Covers proven Blue Zones, BZ Project certified communities, high-longevity counties, US-Mexico border corridor, and major metros as baselines.
 
 ## Tech stack
 
 | Layer | Tool |
 |-------|------|
-| Data modeling | SQL (SQLite), star schema with dimensions + facts + computed scores |
+| Data modeling | SQL (SQLite), star schema with dimensions, facts, computed scores |
 | ETL pipeline | Python, NumPy, SQLAlchemy |
-| Analytics | 10 showcase SQL queries (CTEs, window functions, percentile rankings) |
+| Analytics | 10 SQL queries (CTEs, window functions, percentile rankings, median-based quadrants) |
 | API | FastAPI REST endpoints |
 | Dashboard | Streamlit + Plotly, dark-themed |
-| Tests | pytest, 11 tests covering all analytics functions |
+| Tests | pytest, 11 tests |
 
 ## Quick start
 
@@ -36,9 +32,10 @@ cd verdeazul
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python -m src.seed
 streamlit run dashboard.py
 ```
+
+The database auto-seeds on first run. No manual setup needed.
 
 ## Project structure
 
@@ -47,8 +44,8 @@ verdeazul/
   schema.sql          SQL schema: 6 tables, star schema design
   queries.sql         10 analytical queries (CTEs, window functions, gap analysis)
   src/
-    database.py       SQLite connection + initialization
-    seed.py           ETL pipeline, generates 61 communities x 4 quarters
+    database.py       SQLite connection, auto-seed on first access
+    seed.py           ETL pipeline, 62 communities x 4 quarters, independent health/wealth baselines
     analytics.py      Python analytics layer, returns DataFrames
     api.py            FastAPI REST API (9 endpoints)
   dashboard.py        Streamlit dashboard (4 tabs, branded dark theme)
@@ -58,10 +55,10 @@ verdeazul/
 
 ## Dashboard tabs
 
-1. **Pulse Overview**: key metrics, North America map, rankings, tier benchmarks, border comparison
-2. **Gap Analysis**: health vs wealth scatter plot with quadrant mapping, gap rankings
-3. **Community Profile**: deep dive with radar charts, trend lines, and ranked interventions
-4. **SQL Lab**: browse and run the 10 showcase queries with live results
+1. **Overview**: key metrics, North America map (tightened to US/Mexico), quadrant explainers
+2. **Explore**: health vs economic access scatter plot with dynamic median-based quadrant lines, border comparison, narrative insights
+3. **Your Community**: select any community, bar chart profiles, quarterly trends, projected impact from interventions
+4. **Under the Hood**: browse and run the 10 showcase SQL queries with live results, tier benchmarks
 
 ## API
 
@@ -71,13 +68,15 @@ uvicorn src.api:app --reload --port 8000
 
 Endpoints: `/stats`, `/communities`, `/communities/{id}`, `/communities/{id}/trend`, `/communities/{id}/interventions`, `/rankings`, `/gap-analysis`, `/tiers`, `/border-comparison`
 
-## Data sources (seed methodology)
+## Data model
 
-Seed data uses distributions modeled on CDC PLACES, Census ACS, FDIC bank access, and EPA air quality data. Each community has a prosperity baseline that drives correlated health and financial metrics with realistic noise. Not raw public data, but statistically representative for demonstration.
+Each community has **independent health and wealth baselines** so the data reflects reality: border communities with strong cultural health practices but limited economic access, wealthy suburbs with poor walkability, proven Blue Zones with high health but moderate income. Quadrant thresholds are computed from medians, not hardcoded, so all four quadrants are always populated.
+
+Seed data uses distributions modeled on CDC PLACES, Census ACS, FDIC bank access, and EPA air quality patterns. Statistically representative for demonstration.
 
 ## The philosophy
 
-Health and wealth are not separate problems. A community with good hospitals but no bank branches still fails its residents. A community with high incomes but no walkability still gets sick. VerdeAzul maps that intersection and tells you what to do about it.
+Healthcare access and economic access are not separate problems. A community with good hospitals but no bank branches still fails its residents. A community with high incomes but no walkability still gets sick. VerdeAzul maps that intersection and tells you what to do about it.
 
 ---
 
