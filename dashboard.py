@@ -546,53 +546,89 @@ with tab_community:
             unsafe_allow_html=True,
         )
 
+        # Get national averages for comparison
+        natl = analytics.get_national_averages()
+        n = natl.iloc[0] if not natl.empty else None
+
         m1, m2, m3 = st.columns(3)
-        m1.metric("Overall Score", f"{d['vida_index']}")
-        m2.metric("Life Expectancy", f"{d['life_expectancy']} yr")
+        vida_vs = f"vs {n['avg_vida']:.0f} avg" if n is not None else ""
+        m1.metric("Overall Score", f"{d['vida_index']}", delta=vida_vs, delta_color="off")
+        le_vs = f"vs {n['avg_life_exp']:.1f} avg" if n is not None else ""
+        m2.metric("Life Expectancy", f"{d['life_expectancy']} yr", delta=le_vs, delta_color="off")
         pctl = d['percentile_rank']
         m3.metric("Ranked", f"Top {100 - pctl:.0f}%" if pctl >= 50 else f"Bottom {pctl:.0f}%")
 
-        # Bar charts instead of radar - universally understood
+        # Bar charts with national average markers
         col_h, col_f = st.columns(2)
 
         with col_h:
-            st.markdown('<p class="section-label">Health profile</p>', unsafe_allow_html=True)
-            h_data = pd.DataFrame({
-                "Metric": ["Insurance", "Mental Health", "Preventive Care", "Walkability", "Nutritious Food"],
-                "Score": [d["insurance_coverage_pct"], d["mental_health_score"],
-                          d["preventive_care_pct"], d["walkability_score"], d["food_access_score"]],
-            })
-            fig_h = px.bar(
-                h_data, x="Score", y="Metric", orientation="h",
-                color_discrete_sequence=[VERDE],
-            )
+            st.markdown('<p class="section-label">Health profile vs national average</p>', unsafe_allow_html=True)
+            h_metrics = ["Insurance", "Mental Health", "Preventive Care", "Walkability", "Nutritious Food"]
+            h_vals = [d["insurance_coverage_pct"], d["mental_health_score"],
+                      d["preventive_care_pct"], d["walkability_score"], d["food_access_score"]]
+            h_avgs = [n["avg_insurance"], n["avg_mental"], n["avg_preventive"],
+                      n["avg_walkability"], n["avg_food"]] if n is not None else [50]*5
+
+            fig_h = go.Figure()
+            fig_h.add_trace(go.Bar(
+                y=h_metrics, x=h_vals, orientation="h",
+                marker_color=VERDE, marker_line_width=0,
+                name=d["name"],
+            ))
+            fig_h.add_trace(go.Scatter(
+                y=h_metrics, x=h_avgs, mode="markers",
+                marker=dict(symbol="line-ns", size=14, line=dict(width=2, color="#e0e0e0")),
+                name="National Avg",
+            ))
             fig_h.update_xaxes(range=[0, 100], title="")
             fig_h.update_yaxes(title="")
             fig_h = plotly_layout(fig_h, height=220)
-            fig_h.update_layout(margin=dict(l=10, r=20, t=10, b=20), showlegend=False)
-            fig_h.update_traces(marker_line_width=0)
+            fig_h.update_layout(
+                margin=dict(l=10, r=20, t=10, b=20), showlegend=True,
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0, font=dict(size=10)),
+            )
             st.plotly_chart(fig_h, use_container_width=True, config=PLOTLY_CONFIG)
 
         with col_f:
-            st.markdown('<p class="section-label">Economic profile</p>', unsafe_allow_html=True)
-            inc_n = min((d["median_income"] - 20000) / 125000 * 100, 100)
-            pov_n = max(100 - d["poverty_rate"] * 2.2, 0)
-            bank_n = min(d["bank_branches_per_10k"] / 8 * 100, 100)
-            debt_n = max(100 - d["medical_debt_rate"] * 2.2, 0)
-            biz_n = min(d["small_biz_density"] / 15 * 100, 100)
-            f_data = pd.DataFrame({
-                "Metric": ["Income", "Low Poverty", "Banking", "Low Med Debt", "Local Business"],
-                "Score": [inc_n, pov_n, bank_n, debt_n, biz_n],
-            })
-            fig_f = px.bar(
-                f_data, x="Score", y="Metric", orientation="h",
-                color_discrete_sequence=[AZUL],
-            )
+            st.markdown('<p class="section-label">Economic profile vs national average</p>', unsafe_allow_html=True)
+            inc_n_val = min((d["median_income"] - 20000) / 125000 * 100, 100)
+            pov_n_val = max(100 - d["poverty_rate"] * 2.2, 0)
+            bank_n_val = min(d["bank_branches_per_10k"] / 8 * 100, 100)
+            debt_n_val = max(100 - d["medical_debt_rate"] * 2.2, 0)
+            biz_n_val = min(d["small_biz_density"] / 15 * 100, 100)
+            f_metrics = ["Income", "Low Poverty", "Banking", "Low Med Debt", "Local Business"]
+            f_vals = [inc_n_val, pov_n_val, bank_n_val, debt_n_val, biz_n_val]
+
+            # Compute national avg normalized scores
+            if n is not None:
+                f_avgs = [
+                    min((n["avg_income"] - 20000) / 125000 * 100, 100),
+                    max(100 - n["avg_poverty"] * 2.2, 0),
+                    min(3.5 / 8 * 100, 100),  # approximate avg bank branches
+                    max(100 - n["avg_med_debt"] * 2.2, 0),
+                    min(6.0 / 15 * 100, 100),  # approximate avg small biz
+                ]
+            else:
+                f_avgs = [50]*5
+
+            fig_f = go.Figure()
+            fig_f.add_trace(go.Bar(
+                y=f_metrics, x=f_vals, orientation="h",
+                marker_color=AZUL, marker_line_width=0,
+                name=d["name"],
+            ))
+            fig_f.add_trace(go.Scatter(
+                y=f_metrics, x=f_avgs, mode="markers",
+                marker=dict(symbol="line-ns", size=14, line=dict(width=2, color="#e0e0e0")),
+                name="National Avg",
+            ))
             fig_f.update_xaxes(range=[0, 100], title="")
             fig_f.update_yaxes(title="")
             fig_f = plotly_layout(fig_f, height=220)
-            fig_f.update_layout(margin=dict(l=10, r=20, t=10, b=20), showlegend=False)
-            fig_f.update_traces(marker_line_width=0)
+            fig_f.update_layout(
+                margin=dict(l=10, r=20, t=10, b=20), showlegend=True,
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0, font=dict(size=10)),
+            )
             st.plotly_chart(fig_f, use_container_width=True, config=PLOTLY_CONFIG)
 
         # Trend
@@ -620,6 +656,21 @@ with tab_community:
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         )
         st.plotly_chart(fig_t, use_container_width=True, config=PLOTLY_CONFIG)
+
+        # Peer communities
+        st.markdown('<p class="section-label">Similar communities</p>', unsafe_allow_html=True)
+        peers = analytics.get_peer_communities(selected_id)
+        if not peers.empty:
+            peers_display = peers[["name", "state", "vida_index", "health_score", "wealth_score", "quadrant"]].copy()
+            peers_display["quadrant"] = peers_display["quadrant"].map(QUADRANT_LABELS)
+            st.dataframe(
+                peers_display.rename(columns={
+                    "name": "Community", "state": "State",
+                    "vida_index": "Score", "health_score": "Health",
+                    "wealth_score": "Economic", "quadrant": "Category",
+                }),
+                hide_index=True, use_container_width=True,
+            )
 
         # Interventions with projection
         interventions = analytics.get_interventions(selected_id)

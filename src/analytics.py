@@ -1,14 +1,17 @@
 """Analytics layer for VerdeAzul. Runs SQL queries, returns DataFrames."""
 
 import pandas as pd
+import streamlit as st
 from sqlalchemy import text
 from src.database import get_engine
 
 
+@st.cache_data(ttl=3600)
 def _query(sql, params=None):
     engine = get_engine()
+    params_tuple = tuple(sorted(params.items())) if params else ()
     with engine.connect() as conn:
-        return pd.read_sql(text(sql), conn, params=params or {})
+        return pd.read_sql(text(sql), conn, params=dict(params_tuple) if params_tuple else {})
 
 
 def get_overview_stats(period="2024-Q4"):
@@ -199,3 +202,41 @@ def get_quadrant_thresholds(period="2024-Q4"):
         SELECT health_score, wealth_score FROM vida_scores WHERE period = :period
     """, {"period": period})
     return float(df["health_score"].median()), float(df["wealth_score"].median())
+
+
+def get_peer_communities(community_id, period="2024-Q4", limit=5):
+    """Find communities most similar in score to the given community."""
+    return _query("""
+        SELECT
+            c2.name, c2.state, c2.blue_zone_tier,
+            v2.vida_index, v2.health_score, v2.wealth_score, v2.quadrant,
+            ABS(v2.vida_index - v1.vida_index) AS score_diff
+        FROM vida_scores v1
+        JOIN vida_scores v2 ON v2.period = v1.period AND v2.community_id != v1.community_id
+        JOIN communities c2 ON c2.community_id = v2.community_id
+        WHERE v1.community_id = :cid AND v1.period = :period
+        ORDER BY ABS(v2.vida_index - v1.vida_index)
+        LIMIT :lim
+    """, {"cid": community_id, "period": period, "lim": limit})
+
+
+def get_national_averages(period="2024-Q4"):
+    """Get national average for all key metrics."""
+    return _query("""
+        SELECT
+            ROUND(AVG(h.insurance_coverage_pct), 1) AS avg_insurance,
+            ROUND(AVG(h.mental_health_score), 1) AS avg_mental,
+            ROUND(AVG(h.preventive_care_pct), 1) AS avg_preventive,
+            ROUND(AVG(h.walkability_score), 1) AS avg_walkability,
+            ROUND(AVG(h.food_access_score), 1) AS avg_food,
+            ROUND(AVG(f.median_income)) AS avg_income,
+            ROUND(AVG(f.poverty_rate), 1) AS avg_poverty,
+            ROUND(AVG(f.unbanked_rate), 1) AS avg_unbanked,
+            ROUND(AVG(f.medical_debt_rate), 1) AS avg_med_debt,
+            ROUND(AVG(h.life_expectancy), 1) AS avg_life_exp,
+            ROUND(AVG(v.vida_index), 1) AS avg_vida
+        FROM communities c
+        JOIN health_metrics h ON h.community_id = c.community_id AND h.period = :period
+        JOIN financial_metrics f ON f.community_id = c.community_id AND f.period = :period
+        JOIN vida_scores v ON v.community_id = c.community_id AND v.period = :period
+    """, {"period": period})
