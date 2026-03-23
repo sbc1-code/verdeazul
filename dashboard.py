@@ -392,9 +392,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 st.markdown(
-    '<p class="va-sub">VerdeAzul scores communities on two things that determine how long people live: '
-    'access to healthcare and nutritious food, and access to economic opportunity. '
-    'Then it shows what to fix first.</p>',
+    '<p class="va-sub">VerdeAzul scores communities on the two things that shape how long people live: '
+    'health access and economic access. Then it shows what to fix first.</p>',
     unsafe_allow_html=True,
 )
 
