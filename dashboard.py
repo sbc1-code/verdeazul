@@ -17,15 +17,95 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-VERDE = "#6b7a5e"
-AZUL = "#4a7a8a"
-BG = "#ffffff"
-SURFACE = "#f8f8f7"
-BORDER = "#e5e5e5"
-TEXT = "#1d1d1f"
-MUTED = "#86868b"
-CRITICAL = "#bf4040"
-WARM = "#b8923e"
+# ---------------------------------------------------------------------------
+# Theme system
+# ---------------------------------------------------------------------------
+
+THEMES = {
+    "light": {
+        "verde": "#6b7a5e",
+        "azul": "#4a7a8a",
+        "bg": "#ffffff",
+        "surface": "#f8f8f7",
+        "border": "#e5e5e5",
+        "text": "#1d1d1f",
+        "muted": "#86868b",
+        "critical": "#bf4040",
+        "warm": "#b8923e",
+        "body_text": "#424245",
+        "desc_text": "#6e6e73",
+        "border_hover": "#d2d2d7",
+        "grid": "#f0f0f0",
+        "zeroline": "#e5e5e5",
+        "annotation_bg": "rgba(255,255,255,0.7)",
+        "annotation_text": "#b0b0b0",
+        "marker_line": "#1d1d1f",
+        "land": "#f0f0ed",
+        "ocean": "#e8eef3",
+        "country_line": "#d2d2d7",
+        "lake": "#e8eef3",
+        "plotly_template": "plotly_white",
+        "verde_badge_bg": "rgba(107,122,94,0.08)",
+        "verde_badge_border": "rgba(107,122,94,0.2)",
+        "footer_color": "#d2d2d7",
+    },
+    "dark": {
+        "verde": "#8a9a7b",
+        "azul": "#5b8a9a",
+        "bg": "#0b0b0b",
+        "surface": "#141414",
+        "border": "#222222",
+        "text": "#e5e5e5",
+        "muted": "#8a8a8e",
+        "critical": "#d4605b",
+        "warm": "#d4a84b",
+        "body_text": "#b0b0b4",
+        "desc_text": "#909094",
+        "border_hover": "#333333",
+        "grid": "#1a1a1a",
+        "zeroline": "#222222",
+        "annotation_bg": "rgba(11,11,11,0.7)",
+        "annotation_text": "#666666",
+        "marker_line": "#e5e5e5",
+        "land": "#161616",
+        "ocean": "#0e1215",
+        "country_line": "#2a2a2a",
+        "lake": "#0e1215",
+        "plotly_template": "plotly_dark",
+        "verde_badge_bg": "rgba(138,154,123,0.12)",
+        "verde_badge_border": "rgba(138,154,123,0.3)",
+        "footer_color": "#333333",
+    },
+}
+
+# Initialize theme state
+if "dark_mode" not in st.session_state:
+    st.session_state.dark_mode = False
+
+# Theme toggle in the header area
+_header_left, _header_spacer, _header_right = st.columns([6, 3, 1])
+with _header_right:
+    dark_mode = st.toggle(
+        "Dark",
+        value=st.session_state.dark_mode,
+        key="theme_toggle",
+        help="Switch between light and dark mode",
+    )
+    st.session_state.dark_mode = dark_mode
+
+# Resolve active palette
+T = THEMES["dark"] if st.session_state.dark_mode else THEMES["light"]
+
+# Convenience aliases used throughout
+VERDE = T["verde"]
+AZUL = T["azul"]
+BG = T["bg"]
+SURFACE = T["surface"]
+BORDER = T["border"]
+TEXT = T["text"]
+MUTED = T["muted"]
+CRITICAL = T["critical"]
+WARM = T["warm"]
 
 PLOTLY_CONFIG = {"displayModeBar": False}
 
@@ -59,201 +139,241 @@ TIER_LABELS = {
 }
 
 # ---------------------------------------------------------------------------
-# CSS
+# CSS (dynamically injected based on theme)
 # ---------------------------------------------------------------------------
 
-st.markdown("""
+st.markdown(f"""
 <style>
-    #MainMenu, footer, header {visibility: hidden;}
+    #MainMenu, footer, header {{visibility: hidden;}}
 
-    [data-testid="stMetricValue"] {
+    /* Dark mode: override Streamlit's base colors via CSS custom properties */
+    {"" if not st.session_state.dark_mode else '''
+    .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"],
+    .main, .block-container, section[data-testid="stSidebar"] {
+        background-color: #0b0b0b !important;
+        color: #e5e5e5 !important;
+    }
+    [data-testid="stAppViewBlockContainer"] {
+        background-color: #0b0b0b !important;
+    }
+    .stMarkdown, .stMarkdown p, .stMarkdown span, .stMarkdown li,
+    .stText, label, .stSelectbox label, .stRadio label {
+        color: #e5e5e5 !important;
+    }
+    [data-testid="stDataFrame"], [data-testid="stTable"] {
+        color: #e5e5e5 !important;
+    }
+    .stSelectbox [data-baseweb="select"],
+    .stSelectbox [data-baseweb="select"] * {
+        background-color: #141414 !important;
+        color: #e5e5e5 !important;
+        border-color: #222 !important;
+    }
+    [data-baseweb="popover"], [data-baseweb="menu"],
+    [data-baseweb="popover"] *, [data-baseweb="menu"] * {
+        background-color: #141414 !important;
+        color: #e5e5e5 !important;
+    }
+    [data-baseweb="popover"] li:hover, [data-baseweb="menu"] li:hover {
+        background-color: #222 !important;
+    }
+    pre, code {
+        background-color: #141414 !important;
+        color: #e5e5e5 !important;
+    }
+    iframe[title="streamlit_dataframe.dataframe"] {
+        background-color: #141414 !important;
+    }
+    '''}
+
+    [data-testid="stMetricValue"] {{
         font-size: 2.4rem;
         font-weight: 300;
         letter-spacing: -0.03em;
-        color: #1d1d1f;
-    }
-    [data-testid="stMetricLabel"] {
+        color: {T["text"]};
+    }}
+    [data-testid="stMetricLabel"] {{
         font-size: 0.68rem;
         text-transform: uppercase;
         letter-spacing: 0.12em;
-        color: #86868b;
-    }
-    [data-testid="stMetricDelta"] {
-        color: #86868b !important;
-    }
-    .stTabs [data-baseweb="tab-list"] {
+        color: {T["muted"]};
+    }}
+    [data-testid="stMetricDelta"] {{
+        color: {T["muted"]} !important;
+    }}
+    .stTabs [data-baseweb="tab-list"] {{
         gap: 0;
-        border-bottom: 1px solid #e5e5e5;
-    }
-    .stTabs [data-baseweb="tab"] {
+        border-bottom: 1px solid {T["border"]};
+    }}
+    .stTabs [data-baseweb="tab"] {{
         padding: 10px 24px;
         font-size: 0.78rem;
         letter-spacing: 0.05em;
-        color: #86868b;
-    }
-    .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: #1d1d1f;
-    }
-    .va-mark {
+        color: {T["muted"]};
+    }}
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {{
+        color: {T["text"]};
+    }}
+    .va-mark {{
         font-size: 2rem;
         font-weight: 600;
-        color: #1d1d1f;
+        color: {T["text"]};
         letter-spacing: -0.02em;
         margin: 0 0 6px 0;
         line-height: 1;
-    }
-    .va-mark span.verde { color: #6b7a5e; }
-    .va-mark span.azul { color: #4a7a8a; }
-    .va-hook {
+    }}
+    .va-mark span.verde {{ color: {T["verde"]}; }}
+    .va-mark span.azul {{ color: {T["azul"]}; }}
+    .va-hook {{
         font-size: 1.1rem;
-        color: #1d1d1f;
+        color: {T["text"]};
         margin: 0 0 6px 0;
         font-weight: 400;
         line-height: 1.5;
-    }
-    .va-sub {
+    }}
+    .va-sub {{
         font-size: 0.82rem;
-        color: #86868b;
+        color: {T["muted"]};
         margin: 0 0 36px 0;
         line-height: 1.6;
-    }
-    .section-label {
+    }}
+    .section-label {{
         font-size: 0.62rem;
         letter-spacing: 0.22em;
         text-transform: uppercase;
-        color: #86868b;
+        color: {T["muted"]};
         margin: 36px 0 14px 0;
-    }
-    .insight {
-        background: #f8f8f7;
-        border: 1px solid #e5e5e5;
-        border-left: 3px solid #6b7a5e;
+    }}
+    .insight {{
+        background: {T["surface"]};
+        border: 1px solid {T["border"]};
+        border-left: 3px solid {T["verde"]};
         border-radius: 10px;
         padding: 18px 22px;
         margin: 20px 0;
-    }
-    .insight p {
+    }}
+    .insight p {{
         font-size: 0.88rem;
-        color: #424245;
+        color: {T["body_text"]};
         line-height: 1.65;
         margin: 0;
-    }
-    .insight strong { color: #1d1d1f; }
-    .quad-card {
-        background: #f8f8f7;
+    }}
+    .insight strong {{ color: {T["text"]}; }}
+    .quad-card {{
+        background: {T["surface"]};
         border-radius: 10px;
         padding: 16px 18px;
         border-left: 3px solid;
         min-height: 110px;
-    }
-    .quad-name {
+    }}
+    .quad-name {{
         font-size: 0.82rem;
         font-weight: 600;
         margin-bottom: 6px;
-    }
-    .quad-desc {
+    }}
+    .quad-desc {{
         font-size: 0.74rem;
-        color: #6e6e73;
+        color: {T["desc_text"]};
         line-height: 1.55;
-    }
-    .inv-card {
-        background: #f8f8f7;
-        border: 1px solid #e5e5e5;
+    }}
+    .inv-card {{
+        background: {T["surface"]};
+        border: 1px solid {T["border"]};
         border-radius: 10px;
         padding: 18px 22px;
         margin-bottom: 10px;
-    }
-    .inv-card:hover { border-color: #d2d2d7; }
-    .inv-title {
+    }}
+    .inv-card:hover {{ border-color: {T["border_hover"]}; }}
+    .inv-title {{
         font-size: 0.92rem;
-        color: #1d1d1f;
+        color: {T["text"]};
         font-weight: 500;
         margin-bottom: 5px;
-    }
-    .inv-meta {
+    }}
+    .inv-meta {{
         font-size: 0.7rem;
-        color: #86868b;
+        color: {T["muted"]};
         letter-spacing: 0.04em;
         margin-bottom: 8px;
-    }
-    .inv-desc {
+    }}
+    .inv-desc {{
         font-size: 0.8rem;
-        color: #6e6e73;
+        color: {T["desc_text"]};
         line-height: 1.55;
-    }
-    .inv-impact {
+    }}
+    .inv-impact {{
         display: inline-block;
         font-size: 0.7rem;
-        color: #6b7a5e;
-        background: rgba(107,122,94,0.08);
-        border: 1px solid rgba(107,122,94,0.2);
+        color: {T["verde"]};
+        background: {T["verde_badge_bg"]};
+        border: 1px solid {T["verde_badge_border"]};
         padding: 2px 10px;
         border-radius: 12px;
         margin-left: 10px;
         font-weight: 600;
-    }
-    .community-name {
+    }}
+    .community-name {{
         font-size: 1.6rem;
         font-weight: 600;
-        color: #1d1d1f;
+        color: {T["text"]};
         margin: 8px 0 2px 0;
-    }
-    .community-context {
+    }}
+    .community-context {{
         font-size: 0.78rem;
-        color: #86868b;
+        color: {T["muted"]};
         margin: 0 0 20px 0;
-    }
-    .projection {
-        background: #f8f8f7;
-        border: 1px solid #e5e5e5;
+    }}
+    .projection {{
+        background: {T["surface"]};
+        border: 1px solid {T["border"]};
         border-radius: 12px;
         padding: 20px 24px;
         margin: 16px 0;
-    }
-    .projection-label {
+    }}
+    .projection-label {{
         font-size: 0.65rem;
         letter-spacing: 0.18em;
         text-transform: uppercase;
-        color: #86868b;
+        color: {T["muted"]};
         margin-bottom: 8px;
-    }
-    .projection-row {
+    }}
+    .projection-row {{
         display: flex;
         align-items: baseline;
         gap: 12px;
-    }
-    .projection-current {
+    }}
+    .projection-current {{
         font-size: 1.6rem;
         font-weight: 300;
-        color: #86868b;
-    }
-    .projection-arrow { font-size: 1rem; color: #d2d2d7; }
-    .projection-after {
+        color: {T["muted"]};
+    }}
+    .projection-arrow {{ font-size: 1rem; color: {T["border_hover"]}; }}
+    .projection-after {{
         font-size: 1.6rem;
         font-weight: 600;
-        color: #6b7a5e;
-    }
-    .projection-delta {
+        color: {T["verde"]};
+    }}
+    .projection-delta {{
         font-size: 0.78rem;
-        color: #6b7a5e;
-    }
-    [data-testid="stSidebar"] { border-right: 1px solid #e5e5e5; }
+        color: {T["verde"]};
+    }}
+    [data-testid="stSidebar"] {{ border-right: 1px solid {T["border"]}; }}
 </style>
 """, unsafe_allow_html=True)
 
 
 def plotly_layout(fig, height=400):
     fig.update_layout(
-        template="plotly_white",
+        template=T["plotly_template"],
         paper_bgcolor=BG,
         plot_bgcolor=BG,
         font=dict(color=TEXT, size=12, family="system-ui, -apple-system, sans-serif"),
         margin=dict(l=40, r=20, t=30, b=40),
         height=height,
-        legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11)),
+        legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11, color=TEXT)),
     )
-    fig.update_xaxes(gridcolor="#f0f0f0", zerolinecolor="#e5e5e5")
-    fig.update_yaxes(gridcolor="#f0f0f0", zerolinecolor="#e5e5e5")
+    fig.update_xaxes(gridcolor=T["grid"], zerolinecolor=T["zeroline"])
+    fig.update_yaxes(gridcolor=T["grid"], zerolinecolor=T["zeroline"])
     return fig
 
 
@@ -261,10 +381,12 @@ def plotly_layout(fig, height=400):
 # Header
 # ---------------------------------------------------------------------------
 
-st.markdown(
-    '<p class="va-mark"><span class="verde">Verde</span><span class="azul">Azul</span></p>',
-    unsafe_allow_html=True,
-)
+with _header_left:
+    st.markdown(
+        '<p class="va-mark"><span class="verde">Verde</span><span class="azul">Azul</span></p>',
+        unsafe_allow_html=True,
+    )
+
 st.markdown(
     '<p class="va-hook">How healthy can your community actually become?</p>',
     unsafe_allow_html=True,
@@ -323,10 +445,10 @@ with tab_overview:
     )
     fig_map.update_geos(
         scope="north america",
-        showland=True, landcolor="#f0f0ed",
-        showocean=True, oceancolor="#e8eef3",
-        showcountries=True, countrycolor="#d2d2d7",
-        showlakes=True, lakecolor="#e8eef3",
+        showland=True, landcolor=T["land"],
+        showocean=True, oceancolor=T["ocean"],
+        showcountries=True, countrycolor=T["country_line"],
+        showlakes=True, lakecolor=T["lake"],
         bgcolor=BG,
         projection_type="natural earth",
         center=dict(lat=32, lon=-100),
@@ -425,13 +547,13 @@ with tab_explore:
     )
 
     # Dynamic quadrant lines from actual medians
-    fig_gap.add_hline(y=H_THRESHOLD, line_dash="dot", line_color="#d2d2d7", line_width=1)
-    fig_gap.add_vline(x=W_THRESHOLD, line_dash="dot", line_color="#d2d2d7", line_width=1)
+    fig_gap.add_hline(y=H_THRESHOLD, line_dash="dot", line_color=T["border_hover"], line_width=1)
+    fig_gap.add_vline(x=W_THRESHOLD, line_dash="dot", line_color=T["border_hover"], line_width=1)
 
     # Quadrant labels positioned relative to data
     h_min, h_max = gap_df["health_score"].min() - 2, gap_df["health_score"].max() + 2
     w_min, w_max = gap_df["wealth_score"].min() - 2, gap_df["wealth_score"].max() + 2
-    ann = dict(font=dict(size=10, color="#b0b0b0"), showarrow=False, bgcolor="rgba(255,255,255,0.7)")
+    ann = dict(font=dict(size=10, color=T["annotation_text"]), showarrow=False, bgcolor=T["annotation_bg"])
     fig_gap.add_annotation(x=(w_min + W_THRESHOLD) / 2, y=h_max, text="Healthy, Not Wealthy", **ann)
     fig_gap.add_annotation(x=(w_max + W_THRESHOLD) / 2, y=h_max, text="Thriving", **ann)
     fig_gap.add_annotation(x=(w_max + W_THRESHOLD) / 2, y=h_min, text="Wealthy, Not Healthy", **ann)
@@ -468,7 +590,7 @@ with tab_explore:
     if not wnp.empty:
         wx = wnp.iloc[0]
         st.markdown(
-            f'<div class="insight" style="border-left-color: #b8923e;"><p>'
+            f'<div class="insight" style="border-left-color: {T["warm"]};"><p>'
             f'<strong>{wx["name"]}, {wx["state"]}</strong> has economic access '
             f'({wx["wealth_score"]:.0f}) well ahead of its health outcomes ({wx["health_score"]:.0f}). '
             f'This pattern often points to car-dependent sprawl, fast food density, '
@@ -587,7 +709,7 @@ with tab_community:
             ))
             fig_h.add_trace(go.Scatter(
                 y=h_metrics, x=h_avgs, mode="markers",
-                marker=dict(symbol="line-ns", size=14, line=dict(width=2, color="#1d1d1f")),
+                marker=dict(symbol="line-ns", size=14, line=dict(width=2, color=T["marker_line"])),
                 name="National Avg",
             ))
             fig_h.update_xaxes(range=[0, 100], title="")
@@ -629,7 +751,7 @@ with tab_community:
             ))
             fig_f.add_trace(go.Scatter(
                 y=f_metrics, x=f_avgs, mode="markers",
-                marker=dict(symbol="line-ns", size=14, line=dict(width=2, color="#1d1d1f")),
+                marker=dict(symbol="line-ns", size=14, line=dict(width=2, color=T["marker_line"])),
                 name="National Avg",
             ))
             fig_f.update_xaxes(range=[0, 100], title="")
@@ -797,7 +919,7 @@ with tab_under:
 st.markdown("")
 st.markdown("")
 st.markdown(
-    '<p style="text-align: center; color: #d2d2d7; font-size: 0.6rem; letter-spacing: 0.2em;">'
+    f'<p style="text-align: center; color: {T["footer_color"]}; font-size: 0.6rem; letter-spacing: 0.2em;">'
     "VERDEAZUL"
     "</p>",
     unsafe_allow_html=True,
