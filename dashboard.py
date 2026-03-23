@@ -17,15 +17,15 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-VERDE = "#8a9a7b"
-AZUL = "#5b8a9a"
-BG = "#0b0b0b"
-SURFACE = "#141414"
-BORDER = "#222222"
-TEXT = "#e0e0e0"
-MUTED = "#777777"
-CRITICAL = "#c45c5c"
-WARM = "#c4a35c"
+VERDE = "#6b7a5e"
+AZUL = "#4a7a8a"
+BG = "#ffffff"
+SURFACE = "#f8f8f7"
+BORDER = "#e5e5e5"
+TEXT = "#1d1d1f"
+MUTED = "#86868b"
+CRITICAL = "#bf4040"
+WARM = "#b8923e"
 
 PLOTLY_CONFIG = {"displayModeBar": False}
 
@@ -67,136 +67,146 @@ st.markdown("""
     #MainMenu, footer, header {visibility: hidden;}
 
     [data-testid="stMetricValue"] {
-        font-size: 2.2rem;
+        font-size: 2.4rem;
         font-weight: 300;
         letter-spacing: -0.03em;
+        color: #1d1d1f;
     }
     [data-testid="stMetricLabel"] {
         font-size: 0.68rem;
         text-transform: uppercase;
         letter-spacing: 0.12em;
-        color: #555;
+        color: #86868b;
+    }
+    [data-testid="stMetricDelta"] {
+        color: #86868b !important;
     }
     .stTabs [data-baseweb="tab-list"] {
         gap: 0;
-        border-bottom: 1px solid #1a1a1a;
+        border-bottom: 1px solid #e5e5e5;
     }
     .stTabs [data-baseweb="tab"] {
         padding: 10px 24px;
         font-size: 0.78rem;
         letter-spacing: 0.05em;
+        color: #86868b;
+    }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        color: #1d1d1f;
     }
     .va-mark {
         font-size: 2rem;
-        font-weight: 300;
-        color: #e0e0e0;
+        font-weight: 600;
+        color: #1d1d1f;
         letter-spacing: -0.02em;
         margin: 0 0 6px 0;
         line-height: 1;
     }
-    .va-mark span.verde { color: #8a9a7b; }
-    .va-mark span.azul { color: #5b8a9a; }
+    .va-mark span.verde { color: #6b7a5e; }
+    .va-mark span.azul { color: #4a7a8a; }
     .va-hook {
-        font-size: 1rem;
-        color: #888;
+        font-size: 1.1rem;
+        color: #1d1d1f;
         margin: 0 0 6px 0;
-        font-weight: 300;
+        font-weight: 400;
         line-height: 1.5;
     }
     .va-sub {
-        font-size: 0.78rem;
-        color: #444;
+        font-size: 0.82rem;
+        color: #86868b;
         margin: 0 0 36px 0;
+        line-height: 1.6;
     }
     .section-label {
         font-size: 0.62rem;
         letter-spacing: 0.22em;
         text-transform: uppercase;
-        color: #555;
+        color: #86868b;
         margin: 36px 0 14px 0;
     }
     .insight {
-        background: linear-gradient(135deg, #141414 0%, #181e18 100%);
-        border: 1px solid #222;
-        border-left: 3px solid #8a9a7b;
-        border-radius: 8px;
+        background: #f8f8f7;
+        border: 1px solid #e5e5e5;
+        border-left: 3px solid #6b7a5e;
+        border-radius: 10px;
         padding: 18px 22px;
         margin: 20px 0;
     }
     .insight p {
         font-size: 0.88rem;
-        color: #aaa;
+        color: #424245;
         line-height: 1.65;
         margin: 0;
     }
-    .insight strong { color: #e0e0e0; }
+    .insight strong { color: #1d1d1f; }
     .quad-card {
-        background: #141414;
-        border-radius: 8px;
+        background: #f8f8f7;
+        border-radius: 10px;
         padding: 16px 18px;
         border-left: 3px solid;
         min-height: 110px;
     }
     .quad-name {
         font-size: 0.82rem;
-        font-weight: 500;
+        font-weight: 600;
         margin-bottom: 6px;
     }
     .quad-desc {
         font-size: 0.74rem;
-        color: #666;
+        color: #6e6e73;
         line-height: 1.55;
     }
     .inv-card {
-        background: #141414;
-        border: 1px solid #1e1e1e;
+        background: #f8f8f7;
+        border: 1px solid #e5e5e5;
         border-radius: 10px;
         padding: 18px 22px;
         margin-bottom: 10px;
     }
+    .inv-card:hover { border-color: #d2d2d7; }
     .inv-title {
         font-size: 0.92rem;
-        color: #e0e0e0;
-        font-weight: 400;
+        color: #1d1d1f;
+        font-weight: 500;
         margin-bottom: 5px;
     }
     .inv-meta {
         font-size: 0.7rem;
-        color: #555;
+        color: #86868b;
         letter-spacing: 0.04em;
         margin-bottom: 8px;
     }
     .inv-desc {
         font-size: 0.8rem;
-        color: #777;
+        color: #6e6e73;
         line-height: 1.55;
     }
     .inv-impact {
         display: inline-block;
         font-size: 0.7rem;
-        color: #8a9a7b;
-        background: rgba(138,154,123,0.08);
-        border: 1px solid rgba(138,154,123,0.18);
+        color: #6b7a5e;
+        background: rgba(107,122,94,0.08);
+        border: 1px solid rgba(107,122,94,0.2);
         padding: 2px 10px;
         border-radius: 12px;
         margin-left: 10px;
-        font-weight: 500;
+        font-weight: 600;
     }
     .community-name {
         font-size: 1.6rem;
-        font-weight: 300;
-        color: #e0e0e0;
+        font-weight: 600;
+        color: #1d1d1f;
         margin: 8px 0 2px 0;
     }
     .community-context {
         font-size: 0.78rem;
-        color: #555;
+        color: #86868b;
         margin: 0 0 20px 0;
     }
     .projection {
-        background: #141414;
-        border: 1px solid #222;
-        border-radius: 10px;
+        background: #f8f8f7;
+        border: 1px solid #e5e5e5;
+        border-radius: 12px;
         padding: 20px 24px;
         margin: 16px 0;
     }
@@ -204,7 +214,7 @@ st.markdown("""
         font-size: 0.65rem;
         letter-spacing: 0.18em;
         text-transform: uppercase;
-        color: #555;
+        color: #86868b;
         margin-bottom: 8px;
     }
     .projection-row {
@@ -215,36 +225,35 @@ st.markdown("""
     .projection-current {
         font-size: 1.6rem;
         font-weight: 300;
-        color: #888;
+        color: #86868b;
     }
-    .projection-arrow { font-size: 1rem; color: #555; }
+    .projection-arrow { font-size: 1rem; color: #d2d2d7; }
     .projection-after {
         font-size: 1.6rem;
-        font-weight: 300;
-        color: #8a9a7b;
+        font-weight: 600;
+        color: #6b7a5e;
     }
     .projection-delta {
         font-size: 0.78rem;
-        color: #8a9a7b;
-        opacity: 0.8;
+        color: #6b7a5e;
     }
-    [data-testid="stSidebar"] { border-right: 1px solid #1a1a1a; }
+    [data-testid="stSidebar"] { border-right: 1px solid #e5e5e5; }
 </style>
 """, unsafe_allow_html=True)
 
 
 def plotly_layout(fig, height=400):
     fig.update_layout(
-        template="plotly_dark",
+        template="plotly_white",
         paper_bgcolor=BG,
-        plot_bgcolor=SURFACE,
-        font=dict(color=TEXT, size=12),
+        plot_bgcolor=BG,
+        font=dict(color=TEXT, size=12, family="system-ui, -apple-system, sans-serif"),
         margin=dict(l=40, r=20, t=30, b=40),
         height=height,
         legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11)),
     )
-    fig.update_xaxes(gridcolor=BORDER, zerolinecolor=BORDER)
-    fig.update_yaxes(gridcolor=BORDER, zerolinecolor=BORDER)
+    fig.update_xaxes(gridcolor="#f0f0f0", zerolinecolor="#e5e5e5")
+    fig.update_yaxes(gridcolor="#f0f0f0", zerolinecolor="#e5e5e5")
     return fig
 
 
@@ -314,10 +323,10 @@ with tab_overview:
     )
     fig_map.update_geos(
         scope="north america",
-        showland=True, landcolor="#1a1a1a",
-        showocean=True, oceancolor="#0d1117",
-        showcountries=True, countrycolor="#333",
-        showlakes=True, lakecolor="#0d1117",
+        showland=True, landcolor="#f0f0ed",
+        showocean=True, oceancolor="#e8eef3",
+        showcountries=True, countrycolor="#d2d2d7",
+        showlakes=True, lakecolor="#e8eef3",
         bgcolor=BG,
         projection_type="natural earth",
         center=dict(lat=32, lon=-100),
@@ -416,13 +425,13 @@ with tab_explore:
     )
 
     # Dynamic quadrant lines from actual medians
-    fig_gap.add_hline(y=H_THRESHOLD, line_dash="dot", line_color="#333", line_width=1)
-    fig_gap.add_vline(x=W_THRESHOLD, line_dash="dot", line_color="#333", line_width=1)
+    fig_gap.add_hline(y=H_THRESHOLD, line_dash="dot", line_color="#d2d2d7", line_width=1)
+    fig_gap.add_vline(x=W_THRESHOLD, line_dash="dot", line_color="#d2d2d7", line_width=1)
 
     # Quadrant labels positioned relative to data
     h_min, h_max = gap_df["health_score"].min() - 2, gap_df["health_score"].max() + 2
     w_min, w_max = gap_df["wealth_score"].min() - 2, gap_df["wealth_score"].max() + 2
-    ann = dict(font=dict(size=10, color="#3a3a3a"), showarrow=False, bgcolor="rgba(0,0,0,0)")
+    ann = dict(font=dict(size=10, color="#b0b0b0"), showarrow=False, bgcolor="rgba(255,255,255,0.7)")
     fig_gap.add_annotation(x=(w_min + W_THRESHOLD) / 2, y=h_max, text="Healthy, Not Wealthy", **ann)
     fig_gap.add_annotation(x=(w_max + W_THRESHOLD) / 2, y=h_max, text="Thriving", **ann)
     fig_gap.add_annotation(x=(w_max + W_THRESHOLD) / 2, y=h_min, text="Wealthy, Not Healthy", **ann)
@@ -459,7 +468,7 @@ with tab_explore:
     if not wnp.empty:
         wx = wnp.iloc[0]
         st.markdown(
-            f'<div class="insight" style="border-left-color: {WARM};"><p>'
+            f'<div class="insight" style="border-left-color: #b8923e;"><p>'
             f'<strong>{wx["name"]}, {wx["state"]}</strong> has economic access '
             f'({wx["wealth_score"]:.0f}) well ahead of its health outcomes ({wx["health_score"]:.0f}). '
             f'This pattern often points to car-dependent sprawl, fast food density, '
@@ -578,7 +587,7 @@ with tab_community:
             ))
             fig_h.add_trace(go.Scatter(
                 y=h_metrics, x=h_avgs, mode="markers",
-                marker=dict(symbol="line-ns", size=14, line=dict(width=2, color="#e0e0e0")),
+                marker=dict(symbol="line-ns", size=14, line=dict(width=2, color="#1d1d1f")),
                 name="National Avg",
             ))
             fig_h.update_xaxes(range=[0, 100], title="")
@@ -620,7 +629,7 @@ with tab_community:
             ))
             fig_f.add_trace(go.Scatter(
                 y=f_metrics, x=f_avgs, mode="markers",
-                marker=dict(symbol="line-ns", size=14, line=dict(width=2, color="#e0e0e0")),
+                marker=dict(symbol="line-ns", size=14, line=dict(width=2, color="#1d1d1f")),
                 name="National Avg",
             ))
             fig_f.update_xaxes(range=[0, 100], title="")
@@ -788,7 +797,7 @@ with tab_under:
 st.markdown("")
 st.markdown("")
 st.markdown(
-    '<p style="text-align: center; color: #2a2a2a; font-size: 0.6rem; letter-spacing: 0.2em;">'
+    '<p style="text-align: center; color: #d2d2d7; font-size: 0.6rem; letter-spacing: 0.2em;">'
     "VERDEAZUL"
     "</p>",
     unsafe_allow_html=True,
