@@ -97,18 +97,34 @@ def compute_health_score(c):
     mental = c.get("mental_health_score") or 80
     preventive = c.get("preventive_care_pct") or 70
     aqi = c.get("air_quality_index") or 45
+    walkability = c.get("walkability_score")
 
-    score = _clamp(
-        (100 - diabetes * 3.5) * 0.12 +
-        (100 - heart * 5) * 0.12 +
-        (100 - obesity * 1.5) * 0.10 +
-        insurance * 0.18 +
-        mental * 0.15 +
-        preventive * 0.15 +
-        _clamp(100 - aqi * 0.6, 0, 100) * 0.08 +
-        _clamp(100 - (c.get("smoking_pct") or 15) * 2.5, 0, 100) * 0.10,
-        0, 100
-    )
+    # Base weights sum to 1.0 when walkability is present
+    if walkability is not None:
+        score = _clamp(
+            (100 - diabetes * 3.5) * 0.11 +
+            (100 - heart * 5) * 0.11 +
+            (100 - obesity * 1.5) * 0.09 +
+            insurance * 0.16 +
+            mental * 0.13 +
+            preventive * 0.13 +
+            _clamp(100 - aqi * 0.6, 0, 100) * 0.07 +
+            _clamp(100 - (c.get("smoking_pct") or 15) * 2.5, 0, 100) * 0.10 +
+            walkability * 0.10,
+            0, 100
+        )
+    else:
+        score = _clamp(
+            (100 - diabetes * 3.5) * 0.12 +
+            (100 - heart * 5) * 0.12 +
+            (100 - obesity * 1.5) * 0.10 +
+            insurance * 0.18 +
+            mental * 0.15 +
+            preventive * 0.15 +
+            _clamp(100 - aqi * 0.6, 0, 100) * 0.08 +
+            _clamp(100 - (c.get("smoking_pct") or 15) * 2.5, 0, 100) * 0.10,
+            0, 100
+        )
     return round(score, 1)
 
 
@@ -117,14 +133,26 @@ def compute_wealth_score(c):
     income = c.get("median_income") or 65000
     poverty = c.get("poverty_rate") or 13
     branches = c.get("bank_branches_per_10k") or 3
+    med_debt = c.get("medical_debt_rate")
 
-    score = _clamp(
-        _clamp((income - 20000) / 130000 * 100, 0, 100) * 0.35 +
-        _clamp(100 - poverty * 2.0, 0, 100) * 0.35 +
-        _clamp(branches / 6 * 100, 0, 100) * 0.15 +
-        _clamp((income - 20000) / 130000 * 80 + (100 - poverty), 0, 100) * 0.15,
-        0, 100
-    )
+    # When medical debt data is present, include it in scoring
+    if med_debt is not None:
+        score = _clamp(
+            _clamp((income - 20000) / 130000 * 100, 0, 100) * 0.30 +
+            _clamp(100 - poverty * 2.0, 0, 100) * 0.30 +
+            _clamp(branches / 6 * 100, 0, 100) * 0.12 +
+            _clamp(100 - med_debt * 4.0, 0, 100) * 0.15 +
+            _clamp((income - 20000) / 130000 * 80 + (100 - poverty), 0, 100) * 0.13,
+            0, 100
+        )
+    else:
+        score = _clamp(
+            _clamp((income - 20000) / 130000 * 100, 0, 100) * 0.35 +
+            _clamp(100 - poverty * 2.0, 0, 100) * 0.35 +
+            _clamp(branches / 6 * 100, 0, 100) * 0.15 +
+            _clamp((income - 20000) / 130000 * 80 + (100 - poverty), 0, 100) * 0.15,
+            0, 100
+        )
     return round(score, 1)
 
 
@@ -146,6 +174,10 @@ def pick_interventions(c, health_score, wealth_score):
         gaps.append("financial_inclusion")
     if (c.get("obesity_rate") or 0) > 35:
         gaps.append("food_access")
+    if (c.get("walkability_score") or 100) < 40:
+        gaps.append("walkability")
+    if (c.get("medical_debt_rate") or 0) > 20:
+        gaps.append("financial_inclusion")
     if not gaps:
         gaps = ["preventive_care"]
 
@@ -242,7 +274,7 @@ def seed_from_real_data(engine, counties_data):
                     "preventive_care_pct": c.get("preventive_care_pct"),
                     "life_expectancy": None,  # not in PLACES, could add from IHME later
                     "air_quality_index": c.get("air_quality_index"),
-                    "walkability_score": None,
+                    "walkability_score": c.get("walkability_score"),
                     "food_access_score": None,
                     "health_score": hs,
                 })
@@ -264,7 +296,7 @@ def seed_from_real_data(engine, counties_data):
                     "unbanked_rate": None,
                     "bank_branches_per_10k": c.get("bank_branches_per_10k"),
                     "health_expenditure_per_cap": None,
-                    "medical_debt_rate": None,
+                    "medical_debt_rate": c.get("medical_debt_rate"),
                     "cost_of_living_index": None,
                     "small_biz_density": None,
                     "wealth_score": ws,
@@ -343,7 +375,7 @@ def seed():
         with open(REAL_DATA_PATH) as f:
             counties = json.load(f)
         n = seed_from_real_data(engine, counties)
-        source = "real (CDC PLACES + Census ACS + EPA + FDIC)"
+        source = "real (CDC PLACES + Census ACS + EPA AQI + FDIC + Walkability + Medical Debt)"
     else:
         # Fallback: synthetic data would go here
         # For now, raise an error directing user to run ingest

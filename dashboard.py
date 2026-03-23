@@ -698,10 +698,11 @@ with tab_community:
 
         with col_h:
             st.markdown('<p class="section-label">Health profile vs national average</p>', unsafe_allow_html=True)
-            h_metrics = ["Insurance", "Mental Health", "Preventive Care"]
+            h_metrics = ["Insurance", "Mental Health", "Preventive Care", "Walkability"]
             h_vals = [d["insurance_coverage_pct"] or 0, d["mental_health_score"] or 0,
-                      d["preventive_care_pct"] or 0]
-            h_avgs = [n["avg_insurance"], n["avg_mental"], n["avg_preventive"]] if n is not None else [50]*3
+                      d["preventive_care_pct"] or 0, d["walkability_score"] or 0]
+            h_avgs = [n["avg_insurance"], n["avg_mental"], n["avg_preventive"],
+                      n["avg_walkability"] or 0] if n is not None else [50]*4
 
             fig_h = go.Figure()
             fig_h.add_trace(go.Bar(
@@ -716,7 +717,7 @@ with tab_community:
             ))
             fig_h.update_xaxes(range=[0, 100], title="")
             fig_h.update_yaxes(title="")
-            fig_h = plotly_layout(fig_h, height=220)
+            fig_h = plotly_layout(fig_h, height=260)
             fig_h.update_layout(
                 margin=dict(l=10, r=20, t=10, b=20), showlegend=True,
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0, font=dict(size=10)),
@@ -727,18 +728,22 @@ with tab_community:
             st.markdown('<p class="section-label">Economic profile vs national average</p>', unsafe_allow_html=True)
             income = d["median_income"] or 50000
             poverty = d["poverty_rate"] or 13
+            med_debt = d["medical_debt_rate"]
             inc_n_val = min(max((income - 20000) / 130000 * 100, 0), 100)
             pov_n_val = max(100 - poverty * 2.2, 0)
-            f_metrics = ["Income", "Low Poverty"]
-            f_vals = [inc_n_val, pov_n_val]
+            debt_n_val = max(100 - (med_debt or 0) * 4.0, 0)
+            f_metrics = ["Income", "Low Poverty", "Low Med Debt"]
+            f_vals = [inc_n_val, pov_n_val, debt_n_val]
 
             if n is not None:
+                avg_debt = n["avg_med_debt"] or 0
                 f_avgs = [
                     min(max((n["avg_income"] - 20000) / 130000 * 100, 0), 100),
                     max(100 - n["avg_poverty"] * 2.2, 0),
+                    max(100 - avg_debt * 4.0, 0),
                 ]
             else:
-                f_avgs = [50]*2
+                f_avgs = [50]*3
 
             fig_f = go.Figure()
             fig_f.add_trace(go.Bar(
@@ -753,7 +758,7 @@ with tab_community:
             ))
             fig_f.update_xaxes(range=[0, 100], title="")
             fig_f.update_yaxes(title="")
-            fig_f = plotly_layout(fig_f, height=220)
+            fig_f = plotly_layout(fig_f, height=260)
             fig_f.update_layout(
                 margin=dict(l=10, r=20, t=10, b=20), showlegend=True,
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0, font=dict(size=10)),
