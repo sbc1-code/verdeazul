@@ -102,11 +102,7 @@ CREATE TABLE IF NOT EXISTS interventions (
     intervention_id     INTEGER PRIMARY KEY AUTOINCREMENT,
     community_id        INTEGER NOT NULL REFERENCES communities(community_id),
     period              TEXT NOT NULL,
-    category            TEXT NOT NULL CHECK (category IN (
-                            'walkability', 'food_access', 'financial_inclusion',
-                            'preventive_care', 'community_building', 'air_quality',
-                            'mental_health', 'economic_development'
-                        )),
+    category            TEXT NOT NULL,
     title               TEXT NOT NULL,
     description         TEXT,
     estimated_impact    REAL,       -- projected vida_index point increase

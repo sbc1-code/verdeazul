@@ -21,7 +21,9 @@ def test_overview_stats():
     row = df.iloc[0]
     assert row["total_communities"] > 50
     assert 0 < row["avg_vida_index"] < 100
-    assert row["avg_life_expectancy"] > 65
+    # life expectancy may be None when using real data (not in CDC PLACES)
+    if row["avg_life_expectancy"] is not None:
+        assert row["avg_life_expectancy"] > 65
 
 
 def test_community_map_has_all_communities():

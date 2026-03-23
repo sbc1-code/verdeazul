@@ -68,11 +68,19 @@ uvicorn src.api:app --reload --port 8000
 
 Endpoints: `/stats`, `/communities`, `/communities/{id}`, `/communities/{id}/trend`, `/communities/{id}/interventions`, `/rankings`, `/gap-analysis`, `/tiers`, `/border-comparison`
 
-## Data model
+## Real data sources
 
-Each community has **independent health and wealth baselines** so the data reflects reality: border communities with strong cultural health practices but limited economic access, wealthy suburbs with poor walkability, proven Blue Zones with high health but moderate income. Quadrant thresholds are computed from medians, not hardcoded, so all four quadrants are always populated.
+All data is real, pulled from federal public APIs:
 
-Seed data uses distributions modeled on CDC PLACES, Census ACS, FDIC bank access, and EPA air quality patterns. Statistically representative for demonstration.
+| Source | Data | Counties |
+|--------|------|----------|
+| [CDC PLACES 2025](https://data.cdc.gov/resource/swc5-untb) | Diabetes, obesity, heart disease, insurance, mental health, preventive care, smoking, depression | 2,820 |
+| [Census ACS 5-Year](https://api.census.gov) | Median household income, poverty rate | 2,820 |
+| [EPA AQI](https://aqs.epa.gov/aqsweb/airdata/download_files.html) | Annual median air quality index | 930 |
+
+To refresh data: `python -m src.ingest` (fetches latest from all APIs, saves to `data/real_counties.json`).
+
+Quadrant thresholds are computed from medians, so all four quadrants are always populated.
 
 ## The philosophy
 
