@@ -415,10 +415,11 @@ with tab_overview:
     stats = analytics.get_overview_stats()
     s = stats.iloc[0]
 
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Communities Scored", int(s["total_communities"]))
-    c2.metric("Average Life Expectancy", f"{s['avg_life_expectancy']} yr")
-    c3.metric("Average Score", f"{s['avg_vida_index']}")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Counties Scored", f"{int(s['total_communities']):,}")
+    c2.metric("Average Health", f"{s['avg_health_score']}")
+    c3.metric("Average Economic", f"{s['avg_wealth_score']}")
+    c4.metric("Average Score", f"{s['avg_vida_index']}")
 
     map_df = analytics.get_community_map()
 
@@ -433,7 +434,6 @@ with tab_overview:
         hover_data={
             "state": True,
             "vida_index": ":.1f",
-            "life_expectancy": ":.1f",
             "quadrant": False,
             "latitude": False,
             "longitude": False,
@@ -441,7 +441,7 @@ with tab_overview:
         },
         color_discrete_map=QUADRANT_COLORS,
         category_orders={"quadrant": list(QUADRANT_LABELS.keys())},
-        labels={"vida_index": "Score", "life_expectancy": "Life Exp", "state": "State"},
+        labels={"vida_index": "Score", "state": "State"},
     )
     fig_map.update_geos(
         scope="north america",
@@ -493,13 +493,13 @@ with tab_overview:
 
     st.markdown('<p class="section-label">Highest-scoring communities</p>', unsafe_allow_html=True)
     rankings = analytics.get_rankings(limit=10)
-    display_rankings = rankings[["rank", "name", "state", "vida_index", "life_expectancy", "blue_zone_tier"]].copy()
+    display_rankings = rankings[["rank", "name", "state", "vida_index", "health_score", "wealth_score", "blue_zone_tier"]].copy()
     display_rankings["blue_zone_tier"] = display_rankings["blue_zone_tier"].map(TIER_LABELS)
     st.dataframe(
         display_rankings.rename(columns={
-            "rank": "#", "name": "Community", "state": "State",
-            "vida_index": "Score", "life_expectancy": "Life Exp",
-            "blue_zone_tier": "Tier",
+            "rank": "#", "name": "County", "state": "State",
+            "vida_index": "Score", "health_score": "Health",
+            "wealth_score": "Economic", "blue_zone_tier": "Tier",
         }),
         hide_index=True, use_container_width=True,
     )
@@ -615,13 +615,13 @@ with tab_explore:
     # Border comparison
     st.markdown('<p class="section-label">Border vs non-border communities</p>', unsafe_allow_html=True)
     border = analytics.get_border_comparison()
+    border_display = border[["category", "communities", "avg_health", "avg_wealth", "avg_vida", "avg_gap", "avg_income"]].copy()
     st.dataframe(
-        border.rename(columns={
+        border_display.rename(columns={
             "category": "Type", "communities": "N",
             "avg_health": "Health", "avg_wealth": "Economic",
             "avg_vida": "Score", "avg_gap": "Gap",
-            "avg_life_exp": "Life Exp", "avg_income": "Income",
-            "avg_unbanked": "Unbanked %",
+            "avg_income": "Income",
         }),
         hide_index=True, use_container_width=True,
     )
@@ -629,14 +629,16 @@ with tab_explore:
     if len(border) == 2:
         b_row = border[border["category"] == "Border"].iloc[0]
         nb_row = border[border["category"] == "Non-Border"].iloc[0]
-        gap_yrs = nb_row["avg_life_exp"] - b_row["avg_life_exp"]
-        if gap_yrs > 0:
+        health_gap = nb_row["avg_health"] - b_row["avg_health"]
+        income_gap = nb_row["avg_income"] - b_row["avg_income"]
+        if health_gap > 0:
             st.markdown(
                 f'<div class="insight"><p>'
-                f'Border communities average <strong>{gap_yrs:.1f} fewer years</strong> of life expectancy '
+                f'Border communities score <strong>{health_gap:.1f} points lower</strong> on health '
+                f'and earn <strong>${income_gap:,.0f} less</strong> in median income '
                 f'than non-border communities, despite strong cultural health practices, '
-                f'multigenerational households, and traditional diets. The gap is driven primarily by '
-                f'economic access: banking, insurance coverage, and preventive care infrastructure.'
+                f'multigenerational households, and traditional diets. The gap is driven by '
+                f'economic access: insurance coverage, preventive care, and banking infrastructure.'
                 f'</p></div>',
                 unsafe_allow_html=True,
             )
@@ -682,24 +684,25 @@ with tab_community:
         natl = analytics.get_national_averages()
         n = natl.iloc[0] if not natl.empty else None
 
-        m1, m2, m3 = st.columns(3)
+        m1, m2, m3, m4 = st.columns(4)
         vida_vs = f"vs {n['avg_vida']:.0f} avg" if n is not None else ""
         m1.metric("Overall Score", f"{d['vida_index']}", delta=vida_vs, delta_color="off")
-        le_vs = f"vs {n['avg_life_exp']:.1f} avg" if n is not None else ""
-        m2.metric("Life Expectancy", f"{d['life_expectancy']} yr", delta=le_vs, delta_color="off")
+        h_vs = f"vs {n['avg_insurance']:.0f} avg" if n is not None else ""
+        m2.metric("Health Score", f"{d['health_score']}", delta=h_vs, delta_color="off")
+        w_vs = f"vs {n['avg_poverty']:.0f}% avg" if n is not None else ""
+        m3.metric("Poverty Rate", f"{d['poverty_rate']}%" if d['poverty_rate'] is not None else "N/A", delta=w_vs, delta_color="off")
         pctl = d['percentile_rank']
-        m3.metric("Ranked", f"Top {100 - pctl:.0f}%" if pctl >= 50 else f"Bottom {pctl:.0f}%")
+        m4.metric("Ranked", f"Top {100 - pctl:.0f}%" if pctl >= 50 else f"Bottom {pctl:.0f}%")
 
         # Bar charts with national average markers
         col_h, col_f = st.columns(2)
 
         with col_h:
             st.markdown('<p class="section-label">Health profile vs national average</p>', unsafe_allow_html=True)
-            h_metrics = ["Insurance", "Mental Health", "Preventive Care", "Walkability", "Nutritious Food"]
-            h_vals = [d["insurance_coverage_pct"], d["mental_health_score"],
-                      d["preventive_care_pct"], d["walkability_score"], d["food_access_score"]]
-            h_avgs = [n["avg_insurance"], n["avg_mental"], n["avg_preventive"],
-                      n["avg_walkability"], n["avg_food"]] if n is not None else [50]*5
+            h_metrics = ["Insurance", "Mental Health", "Preventive Care"]
+            h_vals = [d["insurance_coverage_pct"] or 0, d["mental_health_score"] or 0,
+                      d["preventive_care_pct"] or 0]
+            h_avgs = [n["avg_insurance"], n["avg_mental"], n["avg_preventive"]] if n is not None else [50]*3
 
             fig_h = go.Figure()
             fig_h.add_trace(go.Bar(
@@ -723,25 +726,20 @@ with tab_community:
 
         with col_f:
             st.markdown('<p class="section-label">Economic profile vs national average</p>', unsafe_allow_html=True)
-            inc_n_val = min((d["median_income"] - 20000) / 125000 * 100, 100)
-            pov_n_val = max(100 - d["poverty_rate"] * 2.2, 0)
-            bank_n_val = min(d["bank_branches_per_10k"] / 8 * 100, 100)
-            debt_n_val = max(100 - d["medical_debt_rate"] * 2.2, 0)
-            biz_n_val = min(d["small_biz_density"] / 15 * 100, 100)
-            f_metrics = ["Income", "Low Poverty", "Banking", "Low Med Debt", "Local Business"]
-            f_vals = [inc_n_val, pov_n_val, bank_n_val, debt_n_val, biz_n_val]
+            income = d["median_income"] or 50000
+            poverty = d["poverty_rate"] or 13
+            inc_n_val = min(max((income - 20000) / 130000 * 100, 0), 100)
+            pov_n_val = max(100 - poverty * 2.2, 0)
+            f_metrics = ["Income", "Low Poverty"]
+            f_vals = [inc_n_val, pov_n_val]
 
-            # Compute national avg normalized scores
             if n is not None:
                 f_avgs = [
-                    min((n["avg_income"] - 20000) / 125000 * 100, 100),
+                    min(max((n["avg_income"] - 20000) / 130000 * 100, 0), 100),
                     max(100 - n["avg_poverty"] * 2.2, 0),
-                    min(3.5 / 8 * 100, 100),  # approximate avg bank branches
-                    max(100 - n["avg_med_debt"] * 2.2, 0),
-                    min(6.0 / 15 * 100, 100),  # approximate avg small biz
                 ]
             else:
-                f_avgs = [50]*5
+                f_avgs = [50]*2
 
             fig_f = go.Figure()
             fig_f.add_trace(go.Bar(
@@ -903,14 +901,15 @@ with tab_under:
     st.markdown('<p class="section-label">Tier benchmarks</p>', unsafe_allow_html=True)
     tiers = analytics.get_tier_benchmarks()
     tiers["tier"] = tiers["tier"].map(TIER_LABELS)
+    # Only show columns that have data
+    tier_cols = ["tier", "communities", "avg_vida"]
+    tier_rename = {"tier": "Tier", "communities": "N", "avg_vida": "Avg Score"}
+    for col, label in [("avg_income", "Income"), ("avg_poverty", "Poverty %")]:
+        if col in tiers.columns and tiers[col].notna().any():
+            tier_cols.append(col)
+            tier_rename[col] = label
     st.dataframe(
-        tiers.rename(columns={
-            "tier": "Tier", "communities": "N",
-            "avg_vida": "Avg Score", "avg_life_exp": "Life Exp",
-            "avg_walkability": "Walkability", "avg_food_access": "Food Access",
-            "avg_income": "Income", "avg_poverty": "Poverty %",
-            "avg_medical_debt": "Medical Debt %",
-        }),
+        tiers[tier_cols].rename(columns=tier_rename),
         hide_index=True, use_container_width=True,
     )
 
