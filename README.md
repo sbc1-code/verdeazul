@@ -1,8 +1,10 @@
 # VerdeAzul
 
-Every community has the building blocks. Most just don't know where to start.
+How healthy can your community actually become?
 
-Scores 62 communities across North America on healthcare access, nutritious food availability, and economic equity, then tells each one what to do about it.
+Scores 2,820 real US counties on healthcare access, nutritious food availability, and economic equity using CDC, Census, and EPA data, then shows what to fix first.
+
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=sbc1-code/verdeazul&branch=master&mainModule=dashboard.py)
 
 ## What it does
 
