@@ -683,7 +683,7 @@ with tab_under:
     st.markdown("")
 
     from pathlib import Path
-    queries_text = Path("queries.sql").read_text()
+    queries_text = (Path(__file__).parent / "queries.sql").read_text()
     query_blocks = []
     current_title = ""
     current_sql = ""
