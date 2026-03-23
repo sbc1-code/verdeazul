@@ -257,12 +257,13 @@ st.markdown(
     unsafe_allow_html=True,
 )
 st.markdown(
-    '<p class="va-hook">Every community has the building blocks. Most just don\'t know where to start.</p>',
+    '<p class="va-hook">How healthy can your community actually become?</p>',
     unsafe_allow_html=True,
 )
 st.markdown(
-    '<p class="va-sub">Scoring communities across North America on healthcare access, '
-    'nutritious food availability, and economic equity.</p>',
+    '<p class="va-sub">VerdeAzul scores communities on two things that determine how long people live: '
+    'access to healthcare and nutritious food, and access to economic opportunity. '
+    'Then it shows what to fix first.</p>',
     unsafe_allow_html=True,
 )
 
